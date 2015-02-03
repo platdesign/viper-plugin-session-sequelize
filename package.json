@@ -1,7 +1,7 @@
 {
   "name": "viper-plugin-session-sequelize",
   "description": "viper-plugin-session-sequelize",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "dependencies": {
     "connect-sequelize": "^1.0.8",
     "express-session": "^1.10.1",
