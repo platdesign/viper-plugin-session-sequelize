@@ -19,6 +19,7 @@ var configDefaults = {
 
 module.exports = function() {
 
+	var that = this;
 
 	if( this._config[defaults.configId] ) {
 		var config = extend(true, {}, configDefaults, this._config[defaults.configId]);
@@ -27,16 +28,17 @@ module.exports = function() {
 		this.config(function(router, inject) {
 
 			if( config.dbService ) {
-				var dbGetter = new Function(config.dbService, 'return arguments[0];');
 
-				inject(dbGetter)
-				.then(function(db) {
+				return inject([config.dbService, function(db) {
 					config.store = new SequelizeStore(db);
 
+					that.logVerbose('Using sessions (SequelizeStore on '+config.dbService+')');
 					router.use(session(config));
+					return true;
+				}]);
 
-				});
 			} else {
+				that.logVerbose('Using sessions');
 				router.use(session(config));
 			}
 
@@ -46,4 +48,4 @@ module.exports = function() {
 
 	}
 
-}
+};
