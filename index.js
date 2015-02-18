@@ -1,51 +1,30 @@
 'use strict';
 
-var session = require('express-session');
-var SequelizeStore = require('connect-sequelize')(session);
-var extend = require('extend');
-
-var defaults = {
-	configId: 'session'
-};
-
-
-var configDefaults = {
-	resave: false,
-	saveUninitialized: true,
-	secret: 'asdhlalskdfblaizdvflkahbsdlfkhb'
-};
-
-
+var connectSessionSequelize = require('connect-session-sequelize');
 
 module.exports = function() {
 
-	var that = this;
+	this.config(function($serverProvider, $configProvider) {
 
-	if( this._config[defaults.configId] ) {
-		var config = extend(true, {}, configDefaults, this._config[defaults.configId]);
-
-
-		this.config(function(router, inject) {
-
-			if( config.dbService ) {
-
-				return inject([config.dbService, function(db) {
-					config.store = new SequelizeStore(db);
-
-					that.logVerbose('Using sessions (SequelizeStore on '+config.dbService+')');
-					router.use(session(config));
-					return true;
-				}]);
-
-			} else {
-				that.logVerbose('Using sessions');
-				router.use(session(config));
-			}
+		var dbServiceName = $configProvider.get('session.$db');
 
 
+		if(!dbServiceName) {
+			throw new Error('Missing $db attribute in \'session\' config');
+		}
 
-		});
+		$serverProvider
+			.sessionStore(function(sessionMiddleware, $db) {
+				var SequelizeStore = connectSessionSequelize(sessionMiddleware.Store);
 
-	}
+				var store = new SequelizeStore({
+					db: $db[dbServiceName]
+				});
+
+				store.sync();
+
+				return store;
+			});
+	});
 
 };
